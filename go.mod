@@ -1,3 +1,3 @@
-module github.com/loguard/loguard-go
+module github.com/LoGuardSecurity/loguard-sdk-go
 
-go 1.26.4
+go 1.22

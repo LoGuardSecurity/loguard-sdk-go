@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	loguard "github.com/loguard/loguard-go/loguard"
+	loguard "github.com/LoGuardSecurity/loguard-sdk-go/loguard"
 )
 
 func main() {

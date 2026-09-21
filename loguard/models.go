@@ -93,16 +93,3 @@ func buildEvent(in EventInput) (Event, error) {
 		UserID: userID, Service: svc, Meta: meta, Timestamp: ts.UTC().Format(time.RFC3339),
 	}, nil
 }
-
-// AlertRule is a user-defined alerting rule.
-type AlertRule struct {
-	ID          *int             `json:"id,omitempty"`
-	Name        string           `json:"name"`
-	Conditions  []map[string]any `json:"conditions"`
-	Severity    string           `json:"severity"`
-	Actions     []string         `json:"actions"`
-	Enabled     bool             `json:"enabled"`
-	Description string           `json:"description"`
-	Logic       string           `json:"logic"`
-	CooldownSec int              `json:"cooldown_sec"`
-}

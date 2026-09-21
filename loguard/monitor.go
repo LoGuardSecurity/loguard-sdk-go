@@ -22,8 +22,6 @@ type Monitor struct {
 	timeout        time.Duration
 	retries        int
 	defaultService string
-
-	Alerts *AlertsClient
 }
 
 // InitOptions are the parameters for initializing a Monitor.
@@ -95,7 +93,6 @@ func NewMonitor(opts InitOptions) (*Monitor, error) {
 		retries:        opts.Retries,
 		defaultService: defaultService,
 	}
-	m.Alerts = &AlertsClient{m: m}
 	return m, nil
 }
 
@@ -135,37 +132,4 @@ func (m *Monitor) EventBatch(ctx context.Context, ins []EventInput) (map[string]
 		events = append(events, ev)
 	}
 	return sendSigned(ctx, m.ingestURL(), map[string]any{"events": events}, m.apiKey, m.timeout, m.retries)
-}
-
-// Alerts sub-client
-
-type AlertsClient struct{ m *Monitor }
-
-func (a *AlertsClient) url(id *int) string {
-	base := a.m.baseURL + "/v1/alert-rules"
-	if id != nil {
-		return fmt.Sprintf("%s/%d", base, *id)
-	}
-	return base
-}
-
-func (a *AlertsClient) Create(ctx context.Context, rule AlertRule) (map[string]any, error) {
-	return sendSigned(ctx, a.url(nil), rule, a.m.apiKey, a.m.timeout, a.m.retries)
-}
-
-func (a *AlertsClient) List(ctx context.Context) (map[string]any, error) {
-	return sendNoBody(ctx, a.url(nil), a.m.apiKey, "GET", a.m.timeout, a.m.retries)
-}
-
-func (a *AlertsClient) Get(ctx context.Context, id int) (map[string]any, error) {
-	return sendNoBody(ctx, a.url(&id), a.m.apiKey, "GET", a.m.timeout, a.m.retries)
-}
-
-func (a *AlertsClient) Update(ctx context.Context, id int, rule AlertRule) (map[string]any, error) {
-	return sendSignedMethod(ctx, a.url(&id), rule, a.m.apiKey, "PUT", a.m.timeout, a.m.retries)
-}
-
-func (a *AlertsClient) Delete(ctx context.Context, id int) error {
-	_, err := sendNoBody(ctx, a.url(&id), a.m.apiKey, "DELETE", a.m.timeout, a.m.retries)
-	return err
 }

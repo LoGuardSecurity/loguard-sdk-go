@@ -16,7 +16,7 @@ var retryStatuses = map[int]bool{500: true, 502: true, 503: true, 504: true}
 func sendSigned(ctx context.Context, url string, payload any, apiKey string, timeout time.Duration, retries int) (map[string]any, error) {
 	bodyBytes, err := buildBody(payload)
 	if err != nil {
-		return nil, newValidationError(err.Error())
+		return nil, newValidationError("invalid JSON payload")
 	}
 
 	var lastErr error = newConnectionError("unknown error")
@@ -25,12 +25,12 @@ func sendSigned(ctx context.Context, url string, payload any, apiKey string, tim
 	for attempt := 1; attempt <= retries; attempt++ {
 		headers, err := sign(apiKey, bodyBytes)
 		if err != nil {
-			return nil, newConnectionError(err.Error())
+			return nil, newConnectionError("connection error")
 		}
 
 		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(bodyBytes))
 		if err != nil {
-			return nil, newConnectionError(err.Error())
+			return nil, newConnectionError("connection error")
 		}
 		for k, v := range headers {
 			req.Header.Set(k, v)
@@ -38,7 +38,7 @@ func sendSigned(ctx context.Context, url string, payload any, apiKey string, tim
 
 		resp, err := client.Do(req)
 		if err != nil {
-			lastErr = newConnectionError(fmt.Sprintf("connection error: %v", err))
+			lastErr = newConnectionError("connection error")
 			if attempt < retries {
 				time.Sleep(time.Duration(400*attempt) * time.Millisecond)
 			}
@@ -69,11 +69,11 @@ func raiseForStatus(status int, body []byte) (map[string]any, error) {
 	case status == 402:
 		return nil, newAuthError("subscription expired — renew at loguard.org")
 	case status == 403:
-		return nil, newAuthError(fmt.Sprintf("access denied: %v", data["detail"]))
+		return nil, newAuthError("access denied")
 	case status == 404:
-		return nil, newNotFoundError(fmt.Sprintf("not found: %v", data["detail"]))
+		return nil, newNotFoundError("not found")
 	case status == 409:
-		return nil, newConflictError(fmt.Sprintf("conflict: %v", data["detail"]))
+		return nil, newConflictError("conflict")
 	case status == 422:
 		return nil, newValidationError("validation error")
 	case status == 429:
@@ -92,13 +92,13 @@ func sendNoBody(ctx context.Context, url, apiKey, method string, timeout time.Du
 	for attempt := 1; attempt <= retries; attempt++ {
 		req, err := http.NewRequestWithContext(ctx, method, url, nil)
 		if err != nil {
-			return nil, newConnectionError(err.Error())
+			return nil, newConnectionError("connection error")
 		}
 		req.Header.Set("X-Api-Key", apiKey)
 
 		resp, err := client.Do(req)
 		if err != nil {
-			lastErr = newConnectionError(fmt.Sprintf("connection error: %v", err))
+			lastErr = newConnectionError("connection error")
 			if attempt < retries {
 				time.Sleep(time.Duration(400*attempt) * time.Millisecond)
 			}
@@ -122,7 +122,7 @@ func sendNoBody(ctx context.Context, url, apiKey, method string, timeout time.Du
 func sendSignedMethod(ctx context.Context, url string, payload any, apiKey, method string, timeout time.Duration, retries int) (map[string]any, error) {
 	bodyBytes, err := buildBody(payload)
 	if err != nil {
-		return nil, newValidationError(err.Error())
+		return nil, newValidationError("invalid JSON payload")
 	}
 
 	var lastErr error = newConnectionError("unknown error")
@@ -131,11 +131,11 @@ func sendSignedMethod(ctx context.Context, url string, payload any, apiKey, meth
 	for attempt := 1; attempt <= retries; attempt++ {
 		headers, err := sign(apiKey, bodyBytes)
 		if err != nil {
-			return nil, newConnectionError(err.Error())
+			return nil, newConnectionError("connection error")
 		}
 		req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewReader(bodyBytes))
 		if err != nil {
-			return nil, newConnectionError(err.Error())
+			return nil, newConnectionError("connection error")
 		}
 		for k, v := range headers {
 			req.Header.Set(k, v)
@@ -143,7 +143,7 @@ func sendSignedMethod(ctx context.Context, url string, payload any, apiKey, meth
 
 		resp, err := client.Do(req)
 		if err != nil {
-			lastErr = newConnectionError(fmt.Sprintf("connection error: %v", err))
+			lastErr = newConnectionError("connection error")
 			if attempt < retries {
 				time.Sleep(time.Duration(400*attempt) * time.Millisecond)
 			}
